@@ -145,13 +145,17 @@ check(ghost.returncode == 1 and "No memory at" in ghost.stderr,
       "a missing MEMORY_DIR was created instead of reported")
 check(not os.path.exists(d + "-typo"), "a missing MEMORY_DIR was created")
 
-# the fresh-user path: no MEMORY_DIR, wake refuses, init creates the memory,
+# the fresh-user path: no MEMORY_DIR, wake works against a project memory it
+# creates itself but says the global one is missing, init creates that one,
 # prints the paste block, and is idempotent
 fresh = {k: v for k, v in os.environ.items() if k != "MEMORY_DIR"}
 fresh["HOME"] = tempfile.mkdtemp()
+fresh["XDG_DATA_HOME"] = os.path.join(fresh["HOME"], ".local", "share")
 noenv = subprocess.run(memo + ["wake"], capture_output=True, text=True, env=fresh)
-check(noenv.returncode == 1 and "memo init" in noenv.stderr,
-      "with no MEMORY_DIR and no memory, wake must point at init")
+check(noenv.returncode == 0 and "No global memory yet" in noenv.stdout
+      and "memo init" in noenv.stdout,
+      "with no global memory, wake must still work and point at init:\n"
+      + noenv.stdout + noenv.stderr)
 init = subprocess.run(memo + ["init"], capture_output=True, text=True, env=fresh)
 check(init.returncode == 0 and "## Memory" in init.stdout
       and "You are a" in init.stdout, "init must print the AGENTS.md block")
@@ -184,7 +188,7 @@ check(obeyed.returncode == 0 and "saved" in obeyed.stdout,
 badcfg = os.path.join(fresh["HOME"], ".optmem", "memory", "config")
 with open(badcfg, "a") as f:
     f.write("WAKE_LNES = 100\n")
-for c in (["wake"], ["config"]):
+for c in (["wake"], ["--global", "config"]):
     r_ = subprocess.run(memo + c, capture_output=True, text=True, env=fresh)
     check(r_.returncode == 1 and "config line" in r_.stderr
           and "WAKE_LNES" in r_.stderr,
@@ -605,6 +609,63 @@ check(fingerprint(d) == before, "init modified an existing memory")
 r = run("wake")
 check(r.stdout.rstrip().endswith("You are awake."), "wake broke after re-init")
 
+# ---- scope: which memory a command speaks to, when nothing points at one
+# Every test above pins MEMORY_DIR, so it also proves MEMORY_DIR still wins.
+xdg = tempfile.mkdtemp(prefix="optmem-xdg-")
+os.environ["XDG_DATA_HOME"] = xdg
+os.environ.pop("MEMORY_DIR", None)
+real_git = cli.git
+
+
+def as_repo(url):
+    """Resolve a scope as if `git remote get-url origin` printed `url`, or as
+    if there were no remote (None) and no checkout either."""
+    cli.git = lambda *a: url if a[:2] == ("remote", "get-url") and url else ""
+    try:
+        return cli.scope_dir()
+    finally:
+        cli.git = real_git
+
+
+ssh = as_repo("git@github-texarkanine.com:Texarkanine/OptMem.git")
+check(ssh == os.path.join(xdg, "optmem", "repo", "Texarkanine", "OptMem"),
+      "an ssh remote did not reduce to owner/repo: " + ssh)
+check(as_repo("https://github.com/Texarkanine/OptMem") == ssh,
+      "one repo split across two remote spellings")
+check(as_repo("git@github.com:Texarkanine/OptMem.git/") == ssh,
+      "a trailing slash forked the memory of one repo")
+check(as_repo(None).startswith(os.path.join(xdg, "optmem", "path")),
+      "no remote did not fall back to the path")
+check(as_repo("") == as_repo(None), "an empty remote is not the no-remote case")
+
+# --global reaches the one memory that is not a project's, and nothing else.
+cli.SCOPE_GLOBAL = True
+check(cli.memory_dir() == os.path.expanduser(cli.GLOBAL), "--global missed")
+os.environ["MEMORY_DIR"] = d
+check(cli.memory_dir() == d, "MEMORY_DIR no longer wins over --global")
+os.environ.pop("MEMORY_DIR")
+cli.SCOPE_GLOBAL = False
+
+# end to end: a real checkout remembers into its own memory, not the global.
+repo = tempfile.mkdtemp(prefix="optmem-repo-")
+subprocess.run(["git", "init", "-q", repo], check=True)
+subprocess.run(["git", "-C", repo, "remote", "add", "origin",
+                "git@github.com:acme/widget.git"], check=True)
+e2e = subprocess.run(memo + ["note", "scoped memories land in the project"],
+                     cwd=repo, capture_output=True, text=True,
+                     env=dict(os.environ, XDG_DATA_HOME=xdg))
+check(e2e.returncode == 0 and "Saved as #0." in e2e.stdout,
+      "a fresh checkout could not record its first memory: "
+      + e2e.stdout + e2e.stderr)
+log = os.path.join(xdg, "optmem", "repo", "acme", "widget", "LOG.txt")
+check(os.path.exists(log), "the project memory was not created at " + log)
+r = subprocess.run(memo + ["recall", "scoped"], cwd=repo, capture_output=True,
+                   text=True, env=dict(os.environ, XDG_DATA_HOME=xdg))
+check("1 match" in r.stdout or "scoped memories" in r.stdout,
+      "recall did not read the project memory: " + r.stdout + r.stderr)
+
+shutil.rmtree(repo)
+shutil.rmtree(xdg)
 shutil.rmtree(d2)
 shutil.rmtree(d)
 print("\n%d passed, %d failed" % (ok, fail))
