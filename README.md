@@ -29,13 +29,23 @@ The tool lands at `~/.optmem/memo`; put `~/.optmem` on `PATH` to type `memo`.
 | `memo zoom <lo>-<hi>` | open a tree node into its two halves |
 | `memo forget <lo>-<hi>` | drop a bad summary; the next nap rebuilds it |
 
-Put `--global` before any command to reach the memory that follows you into every project. Merges arrive one at a time, in the output of `note`. Nothing ever runs in the background.
+Put `--global` before any command to reach the memory that follows you into every project.
+Merges arrive one at a time, in the output of `note`. Nothing ever runs in the background.
 
-## Why split memory
+## Why Split Memory
 
-A single log is one identity, and wake spends its reading budget on the present. That is right for one continuous workstream and wrong for several: N interleaved projects make each one's detail decay at the rate of the other N−1, so a repo left alone for six months wakes up remembering nothing — its memories intact in the log and out of reach.
+A single log is one identity, and wake spends its reading budget on the present.
+That is right for one continuous workstream and wrong for several: 
+N interleaved projects make each one's detail decay at the rate of the other N−1,
+so a repo left alone for six months wakes up remembering nothing — 
+its memories intact in the log and out of reach.
 
-So every command speaks to the memory of the project in `$PWD`, keyed by the origin remote reduced to `owner/repo` (every worktree and host alias for one repo is one memory). `--global` reaches the one that follows you everywhere. `wake` alone reads both: who you are, then where you are. Almost everything belongs in the project; use `--global` only for what would still be true tomorrow in a repository you have never seen.
+So every command speaks to the memory of the project in `$PWD`, 
+keyed by the origin remote reduced to `owner/repo` 
+(every worktree and host alias for one repo is one memory). 
+`--global` reaches the one that follows you everywhere. `wake` alone reads both: 
+who you are, then where you are. Almost everything belongs in the project; 
+use `--global` only for what would still be true tomorrow in a repository you have never seen.
 
 ## Files
 
