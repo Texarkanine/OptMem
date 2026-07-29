@@ -627,12 +627,12 @@ def as_repo(url):
         cli.git = real_git
 
 
-ssh = as_repo("git@github-texarkanine.com:Texarkanine/OptMem.git")
+ssh = as_repo("git@github-texarkanine.com:Texarkanine/OptMem-Split.git")
 check(ssh == os.path.join(xdg, "optmem", "repo", "Texarkanine", "OptMem"),
       "an ssh remote did not reduce to owner/repo: " + ssh)
-check(as_repo("https://github.com/Texarkanine/OptMem") == ssh,
+check(as_repo("https://github.com/Texarkanine/OptMem-Split") == ssh,
       "one repo split across two remote spellings")
-check(as_repo("git@github.com:Texarkanine/OptMem.git/") == ssh,
+check(as_repo("git@github.com:Texarkanine/OptMem-Split.git/") == ssh,
       "a trailing slash forked the memory of one repo")
 check(as_repo(None).startswith(os.path.join(xdg, "optmem", "path")),
       "no remote did not fall back to the path")

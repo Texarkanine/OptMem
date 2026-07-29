@@ -9,7 +9,7 @@ This fork of [VictorTaelin/OptMem](https://github.com/VictorTaelin/OptMem) flips
 ## Install
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Texarkanine/OptMem/project-scoped-memory/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Texarkanine/OptMem-Split/main.split/install.sh | sh
 ```
 
 It prints a `## Memory` block. Paste that at the top of your agent's
