@@ -557,6 +557,9 @@ Run `{memo} wake` before any other tool call, in every session, and
 then do exactly what it prints, to the end of its output. It reads the
 global memory first, then the memory of the project you are in.
 
+If you can see a prior OptMem wake in this conversation's history,
+do not run it again.
+
 ### While working: register memories (mandatory)
 
 Call `{memo} note "<1 line, max {chars} bytes>"` whenever you learn
