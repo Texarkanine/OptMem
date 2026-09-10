@@ -7,6 +7,7 @@ Uses a fake compressor (join + truncate) so the run is deterministic and free.
 import contextlib
 import datetime
 import io
+import ntpath
 import os
 import re
 import shutil
@@ -631,7 +632,7 @@ def as_repo(url):
 
 
 ssh = as_repo("git@github-texarkanine.com:Texarkanine/OptMem-Split.git")
-check(ssh == os.path.join(xdg, "optmem", "repo", "Texarkanine", "OptMem"),
+check(ssh == os.path.join(xdg, "optmem", "repo", "Texarkanine", "OptMem-Split"),
       "an ssh remote did not reduce to owner/repo: " + ssh)
 check(as_repo("https://github.com/Texarkanine/OptMem-Split") == ssh,
       "one repo split across two remote spellings")
@@ -640,6 +641,38 @@ check(as_repo("git@github.com:Texarkanine/OptMem-Split.git/") == ssh,
 check(as_repo(None).startswith(os.path.join(xdg, "optmem", "path")),
       "no remote did not fall back to the path")
 check(as_repo("") == as_repo(None), "an empty remote is not the no-remote case")
+
+# Windows strings, proven on POSIX via ntpath: no Windows runner.
+win_dir = r"C:\Users\Austin\git\foo"
+check(cli.path_slug(win_dir, path=ntpath)
+      == ntpath.join("path", "c", "users", "austin", "git", "foo"),
+      "a Windows cwd did not nest under path/: "
+      + cli.path_slug(win_dir, path=ntpath))
+check(cli.path_slug(r"C:/Users/Austin/git/foo", path=ntpath)
+      == cli.path_slug(win_dir, path=ntpath),
+      "C:/ vs C:\\ forked the path-local memory")
+check(cli.path_slug(r"S:\Users\Austin\git\foo", path=ntpath)
+      == ntpath.join("path", "s", "users", "austin", "git", "foo"),
+      "a subst drive did not nest under path/")
+check(":" not in cli.path_slug(win_dir, path=ntpath),
+      "a colon survived in the path-local slug")
+posix_here = os.path.normcase(os.path.abspath("/tmp/optmem-scope-posix"))
+check(cli.path_slug(posix_here) == os.path.join("path", *posix_here.strip(os.sep).split(os.sep)),
+      "POSIX path-local slug changed: " + cli.path_slug(posix_here))
+
+win_origin = r"C:\Users\Austin\src\widget.git"
+check(cli.repo_slug(win_origin, path=ntpath)
+      == ntpath.join("repo", "src", "widget"),
+      "a Windows-path origin did not reduce to owner/repo: "
+      + cli.repo_slug(win_origin, path=ntpath))
+rooted = ntpath.join(r"C:\data\optmem", cli.repo_slug(win_origin, path=ntpath))
+check(rooted.startswith(r"C:\data\optmem" + ntpath.sep),
+      "a Windows-path origin threw the store out of optmem: " + rooted)
+check(as_repo(win_origin).startswith(os.path.join(xdg, "optmem", "repo")),
+      "a Windows-path origin left optmem: " + as_repo(win_origin))
+check("\\" not in as_repo(win_origin) and ":" not in as_repo(win_origin)[len(xdg):],
+      "a Windows-path origin kept a drive or backslash in the slug: "
+      + as_repo(win_origin))
 
 # --global reaches the one memory that is not a project's, and nothing else.
 cli.SCOPE_GLOBAL = True
