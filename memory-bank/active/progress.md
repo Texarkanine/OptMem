@@ -15,3 +15,15 @@ Make OptMem-Split project scoping work on native Windows: path-local stores nest
     - Installer/shebang packaging out of scope
 * Insights
     - `os.path.relpath` raises across drives; Austin's machine uses `C:`, `S:`, `V:`
+
+## 2026-09-09 - BUILD - COMPLETE
+
+* Work completed
+    - `path_slug` / `repo_slug`; `scope_dir` uses them
+    - POSIX `test.py` covers Windows strings via `ntpath`; suite green
+    - Corrected owner/repo test that expected `OptMem` instead of `OptMem-Split`
+* Decisions made
+    - Test seam is `path=` on the slug helpers (`ntpath` on Linux), not a Windows runner
+    - UNC drives included as extra `splitdrive` parts (cheap); installer/shebang still out of scope
+* Insights
+    - On POSIX, a backslash origin still "started with optmem/repo" but kept `\\` in the slug; `ntpath.join` is what proves the prefix-discard

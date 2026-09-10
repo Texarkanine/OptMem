@@ -154,6 +154,31 @@ def git(*args):
     return r.stdout.strip() if r.returncode == 0 else ""
 
 
+def path_slug(p, path=os.path):
+    """Absolute filesystem path as a relative nest under optmem/path/.
+
+    Unix: /home/foo → path/home/foo. Windows: C:\\foo → path\\c\\foo.
+    Drive letters are not separators; joining an absolute path as a component
+    would throw away the optmem prefix. Split the drive, then join parts."""
+    p = path.normcase(path.abspath(p))
+    drive, rest = path.splitdrive(p)
+    bits = []
+    if drive.endswith(":"):
+        bits.append(drive[:-1])
+    elif drive:
+        bits.extend(b for b in drive.split(path.sep) if b)
+    bits.extend(b for b in rest.split(path.sep) if b)
+    return path.join("path", *bits)
+
+
+def repo_slug(url, path=os.path):
+    """Origin URL reduced to owner/repo. Split on :, /, and \\ so a Windows
+    file remote cannot become an absolute join that leaves optmem."""
+    url = re.sub(r"\.git[/\\]*$", "", url).rstrip("/\\")
+    parts = [p for p in re.split(r"[:/\\]", url) if p]
+    return path.join("repo", *parts[-2:])
+
+
 def scope_dir():
     """The memory of the project in $PWD. Keyed by the origin remote, reduced
     to owner/repo: every worktree and every host alias for one repo is one
@@ -162,10 +187,9 @@ def scope_dir():
     root = os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share")
     url = git("remote", "get-url", "origin")
     if url:
-        parts = re.split(r"[:/]", re.sub(r"\.git/*$", "", url).rstrip("/"))
-        slug = os.path.join("repo", *parts[-2:])
+        slug = repo_slug(url)
     else:
-        slug = "path" + (git("rev-parse", "--show-toplevel") or os.getcwd())
+        slug = path_slug(git("rev-parse", "--show-toplevel") or os.getcwd())
     return os.path.join(root, "optmem", slug)
 
 
