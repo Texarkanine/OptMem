@@ -27,3 +27,14 @@ Make OptMem-Split project scoping work on native Windows: path-local stores nest
     - UNC drives included as extra `splitdrive` parts (cheap); installer/shebang still out of scope
 * Insights
     - On POSIX, a backslash origin still "started with optmem/repo" but kept `\\` in the slug; `ntpath.join` is what proves the prefix-discard
+
+## 2026-09-09 - QA - COMPLETE (PASS)
+
+* Work completed
+    - Semantic review of `memo` + `test.py` against `projectbrief.md`; all 4 requirements and 3 acceptance criteria met
+    - Re-ran `python3 test.py`: 109118 passed, 0 failed (claim verified, not trusted)
+    - Confirmed build diff is scoped to the slug helpers and tests; no debris, no owed doc updates
+* Decisions made
+    - PASS with two non-blocking advisories recorded in `.qa-validation-status`
+* Insights
+    - The UNC-drive branch in `path_slug` is not YAGNI: without it, distinct shares would silently merge into one store identity
