@@ -25,3 +25,13 @@ Stop nap source lines from putting the log date next to memory text, so agents d
     - Halves unchanged; they never interpolated a date.
 * Insights
     - The fake compressor still collects `  #` lines; keeping `#N` avoided rewriting that loop.
+
+## 2026-09-12 - QA - COMPLETE (PASS)
+
+* Work completed
+    - Re-verified the `nap_prompt` diff against all 4 projectbrief requirements and the KISS/DRY/YAGNI/completeness/regression/integrity/docs checklist.
+    - Re-ran `python3 test.py`: 109123 passed, 0 failed.
+* Decisions made
+    - Accepted as-is; no rework required.
+* Insights
+    - Zoom/recall date display was not re-tested directly, only inferred safe from an untouched code path - flagged as a non-blocking advisory.
