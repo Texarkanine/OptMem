@@ -1,11 +1,12 @@
 # Active Context
 
 ## Current Task: nap-drop-dates
-**Phase:** COMPLEXITY-ANALYSIS - COMPLETE
+**Phase:** BUILD - COMPLETE
 
 ## What Was Done
-- Intent confirmed: SumMem-style nap quotes; drop log date; keep `#N`.
-- Complexity Level 1: single format string in `nap_prompt` (raw branch); halves already have no date.
+- Catching tests: nap source is `#id text`; log date is absent there; wake still prints it.
+- `nap_prompt` raw branch: `"  #%d %s" % (i, text)` instead of including the date.
+- `python3 test.py`: 109123 passed, 0 failed.
 
 ## Next Step
-- Load Level 1 workflow and enter Build.
+- QA subagent (`/niko-qa`).
