@@ -530,7 +530,8 @@ def pending_count(d, T):
 
 def nap_prompt(d, lo, hi, left):
     if hi - lo <= RAW_MAX:
-        body = "\n".join("  #%d %s %s" % e for e in log_slice(d, lo, hi))
+        body = "\n".join("  #%d %s" % (i, text)
+                         for i, _, text in log_slice(d, lo, hi))
     else:
         mid, halves = (lo + hi) // 2, []
         for a, b in ((lo, mid), (mid, hi)):

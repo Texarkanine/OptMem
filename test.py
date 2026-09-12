@@ -216,6 +216,27 @@ check("No memories yet" in r.stdout, "empty wake should say so")
 check(r.stdout.rstrip().endswith("You are awake."),
       "an empty wake must still end with `You are awake.`")
 
+# nap quotes #id text, not #id date text: a leading date in the quoted body
+# is copied into summaries and then stacks. Wake still prints the date.
+dn = tempfile.mkdtemp(prefix="optmem-nap-fmt-")
+run("note", "alpha lasted", store=dn)
+run("note", "beta lasted", store=dn)
+r = run("nap", store=dn)
+today = datetime.date.today().isoformat()
+check("  #0 alpha lasted" in r.stdout,
+      "nap source line must be #id text: " + r.stdout)
+check("  #1 beta lasted" in r.stdout,
+      "nap source line must be #id text: " + r.stdout)
+check(("  #0 %s alpha lasted" % today) not in r.stdout,
+      "nap source line must not include the log date: " + r.stdout)
+check(not re.search(r"(?m)^  #\d+ \d{4}-\d{2}-\d{2} ", r.stdout),
+      "nap source lines must not put YYYY-MM-DD after the id: " + r.stdout)
+run("nap", nap_id(r.stdout), "alpha and beta lasted", store=dn)
+w = run("wake", store=dn)
+check(("#0 %s alpha lasted" % today) in w.stdout,
+      "wake must still print the log date: " + w.stdout)
+shutil.rmtree(dn)
+
 with open(os.path.join(d, "seed.txt"), "w") as f:
     day = datetime.date(2020, 1, 1)
     for i in range(N):
